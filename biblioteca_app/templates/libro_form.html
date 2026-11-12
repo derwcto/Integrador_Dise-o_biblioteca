@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block title %}{{ accion }}{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>{{ accion }}</h1>
+    <p class="muted">{{ 'Modifica los datos del libro.' if libro else 'Completa los datos para dar de alta un libro.' }}</p>
+  </div>
+  <a class="btn btn-ghost" href="{{ url_for('libros_lista') }}">← Volver al listado</a>
+</div>
+
+<form class="form-card" method="post"
+      action="{{ url_for('libros_editar', id_libro=libro.id_libro) if libro else url_for('libros_nuevo') }}">
+  <div class="form-grid">
+    <div class="form-group full">
+      <label for="titulo">Título <span class="req">*</span></label>
+      <input type="text" id="titulo" name="titulo" required maxlength="200"
+             value="{{ libro.titulo if libro else '' }}" placeholder="Ej.: Cien años de soledad">
+    </div>
+
+    <div class="form-group">
+      <label for="isbn">ISBN <span class="req">*</span></label>
+      <input type="text" id="isbn" name="isbn" required maxlength="20"
+             value="{{ libro.isbn if libro else '' }}" placeholder="Ej.: 978-0307474728">
+    </div>
+
+    <div class="form-group">
+      <label for="stock_disponible">Stock disponible</label>
+      <input type="number" id="stock_disponible" name="stock_disponible" min="0" required
+             value="{{ libro.stock_disponible if libro else 1 }}">
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{{ 'Guardar cambios' if libro else 'Registrar libro' }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('libros_lista') }}">Cancelar</a>
+  </div>
+</form>
+
+{% endblock %}

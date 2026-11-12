@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Biblioteca{% endblock %} · Sistema de Biblioteca</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>📚</text></svg>">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="{{ url_for('index') }}">
+        <span class="brand-icon">📚</span>
+        <span>Biblio<strong>Center</strong></span>
+      </a>
+      <nav>
+        <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' }}">Inicio</a>
+        <a href="{{ url_for('libros_lista') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('libros') }}">Mantenimiento de Libros</a>
+        <a href="{{ url_for('prestamos') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('prestamos') }}">Préstamos y Devoluciones</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% if db_error %}
+      <div class="flash flash-error" role="alert">
+        <strong>Sin conexión con MySQL:</strong> {{ db_error }}<br>
+        <small>Verifica que el servidor MySQL esté iniciado y que la base de datos <code>biblioteca</code> exista (<code>python apply_schema.py</code>).</small>
+      </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-group">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}" role="alert">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="container">Sistema de Biblioteca · Flask + MySQL · Base de datos <code>biblioteca</code></div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

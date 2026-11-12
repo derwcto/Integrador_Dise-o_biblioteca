@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+{% block title %}Préstamos y Devoluciones{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Gestión de Préstamos y Devoluciones</h1>
+    <p class="muted">Registra préstamos vía <code>sp_RegistrarPrestamo</code> y devoluciones con multa vía <code>fn_CalcularMultaPorRetraso</code>.</p>
+  </div>
+</div>
+
+<!-- ============ REGISTRAR PRÉSTAMO ============ -->
+<section class="panel">
+  <h2>➕ Registrar préstamo</h2>
+  <form method="post" action="{{ url_for('prestamos_registrar') }}" class="inline-grid">
+    <div class="form-group">
+      <label for="id_lector">Lector <span class="req">*</span></label>
+      <select id="id_lector" name="id_lector" required>
+        <option value="" selected disabled>Selecciona un lector activo…</option>
+        {% for lector in lectores %}
+          <option value="{{ lector.id_lector }}">{{ lector.nombres }} · DNI {{ lector.dni }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="id_libro">Libro (con stock) <span class="req">*</span></label>
+      <select id="id_libro" name="id_libro" required>
+        <option value="" selected disabled>Selecciona un libro disponible…</option>
+        {% for libro in libros %}
+          <option value="{{ libro.id_libro }}">{{ libro.titulo }} ({{ libro.stock_disponible }} en stock)</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group days-group">
+      <label for="dias_prestamo">Días de préstamo <span class="req">*</span></label>
+      <input type="number" id="dias_prestamo" name="dias_prestamo" min="1" max="90" value="7" required>
+    </div>
+
+    <div class="form-group submit-group">
+      <button type="submit" class="btn btn-primary btn-tall">Registrar préstamo</button>
+    </div>
+  </form>
+  {% if not lectores or not libros %}
+    <p class="muted small-note">
+      {% if not lectores %}No hay lectores ACTIVO. <a href="#">Revisa la tabla Lectores.</a>{% endif %}
+      {% if not libros %}No hay libros con stock &gt; 0. <a href="{{ url_for('libros_lista') }}">Revisa el inventario.</a>{% endif %}
+    </p>
+  {% endif %}
+</section>
+
+<!-- ============ DEVOLUCIONES ============ -->
+<section class="panel">
+  <h2>↩️ Registrar devolución</h2>
+  <p class="muted small-note">Al confirmar, se llama a <code>fn_CalcularMultaPorRetraso(fecha_pactada, fecha_real)</code>: 1.00 por día de retraso (0 si se devuelve a tiempo o antes).</p>
+
+  <div class="table-card flat">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Préstamo</th>
+          <th>Lector</th>
+          <th>Libro</th>
+          <th>F. préstamo</th>
+          <th>F. pactada</th>
+          <th>Retraso</th>
+          <th class="center">Devolución</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in prestamos_activos %}
+          <tr class="{{ 'row-late' if p.dias_retraso > 0 }}">
+            <td>#{{ p.id_prestamo }} <span class="muted">· detalle {{ p.id_detalle }}</span></td>
+            <td>{{ p.nombres }}<br><span class="muted">DNI {{ p.dni }}</span></td>
+            <td>{{ p.titulo }}</td>
+            <td>{{ p.fecha_prestamo.strftime('%d/%m/%Y') }}</td>
+            <td>{{ p.fecha_devolucion_pactada.strftime('%d/%m/%Y') }}</td>
+            <td>
+              {% if p.dias_retraso and p.dias_retraso > 0 %}
+                <span class="badge badge-danger">{{ p.dias_retraso }} día(s)</span>
+              {% else %}
+                <span class="badge badge-ok">A tiempo</span>
+              {% endif %}
+            </td>
+            <td class="center">
+              <form method="post" action="{{ url_for('prestamos_devolver', id_detalle=p.id_detalle) }}"
+                    class="return-form"
+                    onsubmit="return confirm('¿Confirmar la devolución de «{{ p.titulo|e }}»?');">
+                <input type="date" name="fecha_devolucion_real" value="{{ hoy }}" required aria-label="Fecha real de devolución">
+                <button type="submit" class="btn btn-small btn-primary">Devolver</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7" class="empty">No hay préstamos activos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ ÚLTIMAS DEVOLUCIONES ============ -->
+{% if ultimas_devoluciones %}
+<section class="panel">
+  <h2>🕘 Últimas devoluciones</h2>
+  <div class="table-card flat">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Lector</th>
+          <th>Libro</th>
+          <th>F. pactada</th>
+          <th>F. real</th>
+          <th class="center">Multa</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in ultimas_devoluciones %}
+          <tr>
+            <td>{{ d.nombres }}</td>
+            <td>{{ d.titulo }}</td>
+            <td>{{ d.fecha_devolucion_pactada.strftime('%d/%m/%Y') }}</td>
+            <td>{{ d.fecha_devolucion_real.strftime('%d/%m/%Y') if d.fecha_devolucion_real else '—' }}</td>
+            <td class="center">
+              {% if d.multa and d.multa > 0 %}
+                <span class="badge badge-danger">S/ {{ '%.2f'|format(d.multa) }}</span>
+              {% else %}
+                <span class="badge badge-ok">S/ 0.00</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

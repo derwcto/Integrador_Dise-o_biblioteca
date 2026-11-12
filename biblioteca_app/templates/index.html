@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div>
+    <h1>Gestión de <span class="accent">Biblioteca</span></h1>
+    <p class="lead">Control de libros, préstamos y devoluciones con cálculo automático de multas.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ url_for('libros_lista') }}">Mantenimiento de Libros</a>
+      <a class="btn btn-outline" href="{{ url_for('prestamos') }}">Préstamos y Devoluciones</a>
+    </div>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <div class="book-stack">
+      <div class="book b1"></div><div class="book b2"></div><div class="book b3"></div><div class="book b4"></div>
+    </div>
+  </div>
+</section>
+
+<section class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-num">{{ resumen.libros }}</div>
+    <div class="stat-label">Títulos registrados</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ resumen.stock }}</div>
+    <div class="stat-label">Ejemplares en stock</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ resumen.lectores }}</div>
+    <div class="stat-label">Lectores activos</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ resumen.activos }}</div>
+    <div class="stat-label">Préstamos en curso</div>
+  </div>
+</section>
+
+<section class="panel-grid">
+  <article class="panel">
+    <h2>📖 Flujo de préstamo</h2>
+    <ol class="flow">
+      <li>Registra libros desde <a href="{{ url_for('libros_lista') }}">Mantenimiento de Libros</a>.</li>
+      <li>Ve a <a href="{{ url_for('prestamos') }}">Préstamos y Devoluciones</a> y selecciona lector y libro.</li>
+      <li>El sistema llama a <code>sp_RegistrarPrestamo</code> (valida lector activo y stock, descuenta existencias).</li>
+      <li>Al devolver, la multa se calcula con <code>fn_CalcularMultaPorRetraso</code> y el stock se repone.</li>
+    </ol>
+  </article>
+  <article class="panel">
+    <h2>🛠️ Requisitos de base de datos</h2>
+    <ul class="flow">
+      <li>Base de datos <code>biblioteca</code> en MySQL (localhost).</li>
+      <li>Tablas <code>Libros</code>, <code>Lectores</code>, <code>Prestamos</code>, <code>Detalle_Prestamos</code>.</li>
+      <li>Procedimiento <code>sp_RegistrarPrestamo</code> y función <code>fn_CalcularMultaPorRetraso</code>.</li>
+      <li>Si no existen, ejecuta <code>python apply_schema.py</code> incluido en el proyecto.</li>
+    </ul>
+  </article>
+</section>
+
+{% endblock %}

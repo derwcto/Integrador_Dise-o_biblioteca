@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block title %}Mantenimiento de Libros{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Mantenimiento de Libros</h1>
+    <p class="muted">Registra, edita, lista y elimina los libros del catálogo.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('libros_nuevo') }}">+ Registrar libro</a>
+</div>
+
+<form class="search-bar" method="get" action="{{ url_for('libros_lista') }}">
+  <input type="text" name="q" value="{{ q }}" placeholder="Buscar por título o ISBN…" aria-label="Buscar libros">
+  <button type="submit" class="btn btn-outline">Buscar</button>
+  {% if q %}<a class="btn btn-ghost" href="{{ url_for('libros_lista') }}">Limpiar</a>{% endif %}
+</form>
+
+<div class="table-card">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Título</th>
+        <th>ISBN</th>
+        <th class="center">Stock</th>
+        <th class="center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for libro in libros %}
+        <tr class="{{ 'row-out' if libro.stock_disponible == 0 }}">
+          <td class="muted">{{ libro.id_libro }}</td>
+          <td>{{ libro.titulo }}</td>
+          <td><code>{{ libro.isbn }}</code></td>
+          <td class="center">
+            <span class="badge {{ 'badge-ok' if libro.stock_disponible > 2 else ('badge-warn' if libro.stock_disponible > 0 else 'badge-danger') }}">
+              {{ libro.stock_disponible }} disp.
+            </span>
+          </td>
+          <td class="center actions">
+            <a class="btn btn-small btn-outline" href="{{ url_for('libros_editar', id_libro=libro.id_libro) }}">Editar</a>
+            <form method="post" action="{{ url_for('libros_eliminar', id_libro=libro.id_libro) }}" class="inline-form"
+                  onsubmit="return confirm('¿Eliminar «{{ libro.titulo|e }}»? Esta acción no se puede deshacer.');">
+              <button type="submit" class="btn btn-small btn-danger">Eliminar</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="5" class="empty">
+            {% if q %}No se encontraron libros para «{{ q }}».{% else %}Aún no hay libros registrados.{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
